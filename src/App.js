@@ -4,20 +4,18 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import Sidebar from "./components/Sidebar";
 import MidArea from "./components/MidArea";
 import PreviewArea from "./components/PreviewArea";
-console.log("?? Latest Build Check");
+console.log("?? Latest Build Checking");
 
 export default function App() {
-    console.log("This is latest build");
+    console.log("This is latest building new");
+    
     const [sprites, setSprites] = useState([
-
         {
-            id: Date.now(),
-            blocks: [],
-            position: { x: 0, y: 0, rotation: 0 },
-            speech: { message: "", visible: false }
-        }
+            id: 1,
+            position: { x: 100, y: 100, rotation: 0 },
+            speech: { visible: false, message: "" },
+        },
     ]);
-
 
     const addSprite = () => {
         setSprites(prev => [
@@ -42,13 +40,30 @@ export default function App() {
             })
         );
     };
-    const updateSpritePosition = (spriteId, newPosition) => {
-        setSprites(prev =>
-            prev.map(sprite =>
-                sprite.id === spriteId ? { ...sprite, position: newPosition } : sprite
+    const setSpritePosition = (id, position) => {
+        setSprites((prev) =>
+            prev.map((sprite) =>
+                sprite.id === id ? { ...sprite, position: { ...sprite.position, ...position } } : sprite
             )
         );
     };
+    const updateSpritePosition = (id, newPos) => {
+        setSprites((prev) =>
+            prev.map((sprite) =>
+                sprite.id === id
+                    ? {
+                        ...sprite,
+                        position: {
+                            ...sprite.position,
+                            x: newPos.x,
+                            y: newPos.y,
+                        },
+                    }
+                    : sprite
+            )
+        );
+    };
+
     const executeBlocks = (blocks, sprite, indexOffset = 0) => {
         if (!Array.isArray(blocks)) {
             console.error("Expected 'blocks' to be an array but got:", blocks);
@@ -191,10 +206,8 @@ export default function App() {
                         ))}
                     </div>
                 </div>
-                <PreviewArea
-                    sprites={sprites}
-                    setSpritePosition={updateSpritePosition}
-                />
+                <PreviewArea sprites={sprites} setSpritePosition={setSpritePosition} />
+
             </div>
         </DndProvider>
     );
