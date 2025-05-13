@@ -1,21 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import Sidebar from "./components/Sidebar";
 import MidArea from "./components/MidArea";
 import PreviewArea from "./components/PreviewArea";
-console.log("?? Latest Build Checking");
+
+console.log("?? Latest Build Check develop");
 
 export default function App() {
-    console.log("This is latest building new");
-    
+    console.log("This is latest build");
+
     const [sprites, setSprites] = useState([
         {
             id: 1,
+            direction: 10, 
             position: { x: 100, y: 100, rotation: 0 },
             speech: { visible: false, message: "" },
         },
     ]);
+    const collidedPairsRef = useRef(new Set());
+
 
     const addSprite = () => {
         setSprites(prev => [
@@ -151,7 +155,6 @@ export default function App() {
             await executeBlocks(sprite.blocks, sprite);
         }
 
-        // Check for collision afterward (or during, if needed)
         const newSprites = [...sprites];
         let updated = false;
 
@@ -160,12 +163,27 @@ export default function App() {
                 const s1 = newSprites[i];
                 const s2 = newSprites[j];
 
+                const pairKey = [s1.id, s2.id].sort().join("-");
+                const hasCollidedBefore = collidedPairsRef.current.has(pairKey);
+
                 if (checkCollision(s1, s2)) {
-                    // Swap blocks
-                    const tempBlocks = s1.blocks;
-                    newSprites[i] = { ...s1, blocks: s2.blocks };
-                    newSprites[j] = { ...s2, blocks: tempBlocks };
-                    updated = true;
+                    if (!hasCollidedBefore) {
+                        // Swap their blocks
+                        const tempBlocks = s1.blocks;
+                        newSprites[i] = { ...s1, blocks: s2.blocks };
+                        newSprites[j] = { ...s2, blocks: tempBlocks };
+
+                        // Optionally, reverse direction logic too
+                        const tempDir = s1.direction;
+                        newSprites[i].direction = s2.direction;
+                        newSprites[j].direction = tempDir;
+
+                        collidedPairsRef.current.add(pairKey);
+                        updated = true;
+                    }
+                } else {
+                    // If they're no longer touching, remove the pair from the set
+                    collidedPairsRef.current.delete(pairKey);
                 }
             }
         }
@@ -173,7 +191,8 @@ export default function App() {
         if (updated) setSprites(newSprites);
     };
 
-   
+
+
     return (
         <DndProvider backend={HTML5Backend}>
             <div className="flex h-screen">
@@ -212,3 +231,4 @@ export default function App() {
         </DndProvider>
     );
 }
+
