@@ -1,17 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
 import CatSprite from "./CatSprite";
 
-export default function PreviewArea({ sprites }) {
+export default function PreviewArea({ sprites, setSpritePosition }) {
+    const [draggingId, setDraggingId] = useState(null);
+    const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+    const handleMouseDown = (e, sprite) => {
+        // Prevent text/image selection while dragging
+        e.preventDefault();
+        setDraggingId(sprite.id);
+
+        const containerRect = e.currentTarget.parentElement.getBoundingClientRect();
+
+        setOffset({
+            x: e.clientX - containerRect.left - sprite.position.x,
+            y: e.clientY - containerRect.top - sprite.position.y,
+        });
+    };
+
+    const handleMouseMove = (e) => {
+        if (draggingId !== null) {
+            const previewAreaRect = e.currentTarget.getBoundingClientRect();
+            const newX = e.clientX - previewAreaRect.left - offset.x;
+            const newY = e.clientY - previewAreaRect.top - offset.y;
+
+            setSpritePosition(draggingId, { x: newX, y: newY });
+        }
+    };
+
+    const handleMouseUp = () => {
+        setDraggingId(null);
+    };
+
     return (
-        <div className="flex-1 h-full relative bg-gray-100 overflow-hidden">
+        <div
+            className="flex-1 h-full relative bg-gray-100 overflow-hidden"
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+        >
             {sprites.map((sprite) => (
                 <div
                     key={sprite.id}
                     className="absolute"
                     style={{
                         transform: `translate(${sprite.position?.x || 0}px, ${sprite.position?.y || 0}px) rotate(${sprite.position?.rotation || 0}deg)`,
-                        cursor: "move"
+                        cursor: "move",
                     }}
+                    onMouseDown={(e) => handleMouseDown(e, sprite)}
                 >
                     {sprite.speech?.visible && (
                         <div
@@ -20,7 +56,7 @@ export default function PreviewArea({ sprites }) {
                                 left: "40px",
                                 top: "-30px",
                                 maxWidth: "200px",
-                                whiteSpace: "nowrap"
+                                whiteSpace: "nowrap",
                             }}
                         >
                             {sprite.speech.message}
@@ -32,4 +68,3 @@ export default function PreviewArea({ sprites }) {
         </div>
     );
 }
-
